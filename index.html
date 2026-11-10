@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VeriQuota — Verify where your mobile data goes</title>
+  <meta name="description" content="VeriQuota measures per-app data usage locally on-device, in real time, with no data leaving your phone. Coming soon to Android.">
+  <link rel="canonical" href="https://veriquota.com">
+
+  <!-- Open Graph / Meta -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://veriquota.com">
+  <meta property="og:title" content="VeriQuota — Verify where your mobile data goes">
+  <meta property="og:description" content="Independent, on-device data accounting for Android. Measure per-app mobile data in real time with complete privacy.">
+  <meta property="og:image" content="https://veriquota.com/og-image.png">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="VeriQuota — Verify where your mobile data goes">
+  <meta name="twitter:description" content="Independent, on-device data accounting for Android. Measure per-app mobile data in real time with complete privacy.">
+
+  <!-- Google Fonts: Manrope -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="public/veriquota-app-icon.png">
+
+  <style>
+    /* -------------------------------------------------------------
+       DESIGN SYSTEM & TOKENS
+       Brand: Navy #0F1E33, Off-White #F5F4F1, Gray #6B7280, Accent #E4572E
+       ------------------------------------------------------------- */
+    :root {
+      --color-navy: #0F1E33;
+      --color-navy-dark: #0A1422;
+      --color-navy-surface: #17283F;
+      --color-navy-border: rgba(255, 255, 255, 0.12);
+      --color-offwhite: #F5F4F1;
+      --color-surface-white: #FFFFFF;
+      --color-gray: #6B7280;
+      --color-gray-dark: #374151;
+      --color-gray-light: #9CA3AF;
+      --color-border-light: #E5E3DC;
+      --color-accent: #E4572E;
+      --color-accent-subtle: rgba(228, 87, 46, 0.12);
+      --color-success: #15803D;
+      --color-success-bg: #DCFCE7;
+      --color-error: #B91C1C;
+      --color-error-bg: #FEE2E2;
+
+      --font-primary: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+      --container-max: 1120px;
+      --container-narrow: 760px;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --transition-standard: 180ms ease;
+    }
+
+    /* Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--color-offwhite);
+      color: var(--color-navy);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    p {
+      color: var(--color-gray-dark);
+      font-size: 1.0625rem;
+      line-height: 1.68;
+    }
+
+    /* Layout Utilities */
+    .container {
+      width: 100%;
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    .container-narrow {
+      max-width: var(--container-narrow);
+    }
+
+    /* Header / Nav */
+    .site-header {
+      padding: 1.5rem 0;
+      border-bottom: 1px solid var(--color-border-light);
+      background-color: rgba(245, 244, 241, 0.94);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .nav-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.025em;
+      color: var(--color-navy);
+    }
+
+    .brand-logo-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .nav-link {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--color-gray-dark);
+      transition: color var(--transition-standard);
+    }
+
+    .nav-link:hover {
+      color: var(--color-navy);
+    }
+
+    .nav-btn {
+      padding: 0.55rem 1.15rem;
+      background-color: var(--color-navy);
+      color: #FFFFFF;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      transition: background-color var(--transition-standard), transform var(--transition-standard);
+    }
+
+    .nav-btn:hover {
+      background-color: var(--color-navy-surface);
+    }
+
+    /* Eyebrow Tag */
+    .eyebrow-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      background-color: #FFFFFF;
+      border: 1px solid var(--color-border-light);
+      color: var(--color-navy);
+      margin-bottom: 1.5rem;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background-color: var(--color-accent);
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Hero Section */
+    .hero-section {
+      padding: 5.5rem 0 4.5rem;
+    }
+
+    .hero-layout {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 3.5rem;
+      align-items: center;
+    }
+
+    .hero-headline {
+      font-size: 3.25rem;
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      color: var(--color-navy);
+      margin-bottom: 1rem;
+    }
+
+    .hero-tagline {
+      font-size: 1.45rem;
+      line-height: 1.35;
+      font-weight: 600;
+      color: var(--color-navy);
+      letter-spacing: -0.015em;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-description {
+      font-size: 1.075rem;
+      line-height: 1.7;
+      color: var(--color-gray-dark);
+      margin-bottom: 2rem;
+      max-width: 580px;
+    }
+
+    /* Forms */
+    .waitlist-form-container {
+      margin-bottom: 1rem;
+    }
+
+    .waitlist-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-width: 480px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 0.5rem;
+      position: relative;
+    }
+
+    .input-email {
+      flex: 1;
+      padding: 0.875rem 1.125rem;
+      font-family: var(--font-primary);
+      font-size: 0.975rem;
+      color: var(--color-navy);
+      background-color: var(--color-surface-white);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-sm);
+      outline: none;
+      transition: border-color var(--transition-standard), box-shadow var(--transition-standard);
+    }
+
+    .input-email::placeholder {
+      color: var(--color-gray-light);
+    }
+
+    .input-email:focus {
+      border-color: var(--color-navy);
+      box-shadow: 0 0 0 3px rgba(15, 30, 51, 0.08);
+    }
+
+    .btn-submit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.45rem;
+      font-family: var(--font-primary);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      background-color: var(--color-navy);
+      border: 1px solid var(--color-navy);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color var(--transition-standard), border-color var(--transition-standard), opacity var(--transition-standard);
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background-color: var(--color-navy-surface);
+      border-color: var(--color-navy-surface);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .form-meta {
+      font-size: 0.8125rem;
+      color: var(--color-gray);
+      margin-top: 0.45rem;
+    }
+
+    .form-status {
+      margin-top: 0.85rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: none;
+    }
+
+    .form-status.success {
+      display: block;
+      background-color: var(--color-success-bg);
+      color: var(--color-success);
+      border: 1px solid rgba(21, 128, 61, 0.2);
+    }
+
+    .form-status.error {
+      display: block;
+      background-color: var(--color-error-bg);
+      color: var(--color-error);
+      border: 1px solid rgba(185, 28, 28, 0.2);
+    }
+
+    /* Hero Visual Card (CSS-only interactive mock) */
+    .hero-card {
+      background-color: #FFFFFF;
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      box-shadow: 0 12px 32px rgba(15, 30, 51, 0.05);
+    }
+
+    .card-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .card-title {
+      font-size: 0.925rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-gray);
+    }
+
+    .card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.785rem;
+      font-weight: 600;
+      color: var(--color-navy);
+      background: var(--color-offwhite);
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid var(--color-border-light);
+    }
+
+    .live-pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--color-accent);
+    }
+
+    .data-summary-box {
+      margin-bottom: 1.5rem;
+      background: var(--color-offwhite);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+    }
+
+    .data-summary-label {
+      font-size: 0.8125rem;
+      color: var(--color-gray);
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+    }
+
+    .data-summary-val {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--color-navy);
+      letter-spacing: -0.02em;
+    }
+
+    .data-summary-val span {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--color-gray-dark);
+      margin-left: 0.2rem;
+    }
+
+    .meter-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .meter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .meter-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .app-name {
+      color: var(--color-navy);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .app-badge-sm {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background-color: var(--color-navy);
+    }
+
+    .app-usage {
+      color: var(--color-navy);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .meter-bar-track {
+      width: 100%;
+      height: 7px;
+      background-color: var(--color-offwhite);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #ECEAE3;
+    }
+
+    .meter-bar-fill {
+      height: 100%;
+      background-color: var(--color-navy);
+      border-radius: 999px;
+    }
+
+    .meter-bar-fill.accent {
+      background-color: var(--color-accent);
+    }
+
+    .meter-bar-fill.muted {
+      background-color: var(--color-gray);
+    }
+
+    .card-footer-note {
+      margin-top: 1.25rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--color-border-light);
+      font-size: 0.8rem;
+      color: var(--color-gray);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Section Headers */
+    .section-header {
+      margin-bottom: 3.5rem;
+    }
+
+    .section-kicker {
+      font-size: 0.8125rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-accent);
+      margin-bottom: 0.65rem;
+      display: inline-block;
+    }
+
+    .section-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--color-navy);
+      line-height: 1.2;
+    }
+
+    .section-subtitle {
+      margin-top: 0.75rem;
+      max-width: 640px;
+    }
+
+    /* Section 2: The Problem */
+    .problem-section {
+      padding: 5rem 0;
+      border-top: 1px solid var(--color-border-light);
+    }
+
+    .cards-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.75rem;
+    }
+
+    .problem-card {
+      background-color: #FFFFFF;
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      padding: 2rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      transition: transform var(--transition-standard), box-shadow var(--transition-standard);
+    }
+
+    .problem-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(15, 30, 51, 0.04);
+    }
+
+    .card-callout-number {
+      font-size: 0.875rem;
+      font-weight: 800;
+      color: var(--color-accent);
+      letter-spacing: 0.04em;
+    }
+
+    .card-heading {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--color-navy);
+      line-height: 1.35;
+    }
+
+    .card-text {
+      font-size: 0.985rem;
+      color: var(--color-gray-dark);
+      line-height: 1.6;
+    }
+
+    /* Section 3: How VeriQuota Works */
+    .how-section {
+      padding: 5rem 0;
+      border-top: 1px solid var(--color-border-light);
+      background-color: #FAF9F6;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    .step-card {
+      background-color: #FFFFFF;
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      padding: 2.25rem 2rem;
+      position: relative;
+    }
+
+    .step-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background-color: var(--color-navy);
+      color: #FFFFFF;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+    }
+
+    .step-card:first-child .step-badge {
+      border-left: 3px solid var(--color-accent);
+    }
+
+    .step-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--color-navy);
+      margin-bottom: 0.75rem;
+      line-height: 1.35;
+    }
+
+    .step-desc {
+      font-size: 0.975rem;
+      color: var(--color-gray-dark);
+      line-height: 1.6;
+    }
+
+    /* Section 4: Trust & Privacy (Navy Theme) */
+    .privacy-section {
+      background-color: var(--color-navy);
+      color: #FFFFFF;
+      padding: 6rem 0;
+    }
+
+    .privacy-header .section-kicker {
+      color: var(--color-accent);
+    }
+
+    .privacy-header .section-title {
+      color: #FFFFFF;
+    }
+
+    .privacy-header .section-subtitle {
+      color: #C0C8D4;
+    }
+
+    .privacy-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.75rem;
+      margin-top: 3.5rem;
+    }
+
+    .privacy-card {
+      background-color: var(--color-navy-surface);
+      border: 1px solid var(--color-navy-border);
+      border-radius: var(--radius-md);
+      padding: 2rem 1.75rem;
+    }
+
+    .privacy-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background-color: rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+      color: #FFFFFF;
+    }
+
+    .privacy-card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 0.65rem;
+      letter-spacing: -0.015em;
+    }
+
+    .privacy-card-text {
+      font-size: 0.95rem;
+      color: #B5BFCD;
+      line-height: 1.62;
+    }
+
+    /* Section 5: Vision Teaser */
+    .vision-section {
+      padding: 5.5rem 0;
+      border-top: 1px solid var(--color-border-light);
+      background-color: var(--color-offwhite);
+    }
+
+    .vision-box {
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-lg);
+      background-color: #FFFFFF;
+      padding: 3rem;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .vision-kicker {
+      font-size: 0.8125rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-gray);
+      margin-bottom: 0.75rem;
+    }
+
+    .vision-heading {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--color-navy);
+      margin-bottom: 1rem;
+      line-height: 1.3;
+    }
+
+    .vision-text {
+      font-size: 1.05rem;
+      line-height: 1.75;
+      color: var(--color-gray-dark);
+    }
+
+    /* Section 6: Final CTA */
+    .final-cta-section {
+      padding: 5.5rem 0;
+      border-top: 1px solid var(--color-border-light);
+      background-color: #FFFFFF;
+      text-align: center;
+    }
+
+    .final-cta-content {
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    .final-cta-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--color-navy);
+      margin-bottom: 0.85rem;
+    }
+
+    .final-cta-text {
+      margin-bottom: 2rem;
+      font-size: 1.05rem;
+    }
+
+    .final-cta-form {
+      margin: 0 auto;
+    }
+
+    /* Footer */
+    .site-footer {
+      border-top: 1px solid var(--color-border-light);
+      padding: 3rem 0;
+      background-color: var(--color-offwhite);
+      margin-top: auto;
+    }
+
+    .footer-layout {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .footer-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .footer-brand-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .footer-logo {
+      font-weight: 800;
+      font-size: 1.125rem;
+      letter-spacing: -0.025em;
+      color: var(--color-navy);
+    }
+
+    .footer-copyright {
+      font-size: 0.85rem;
+      color: var(--color-gray);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.75rem;
+      align-items: center;
+    }
+
+    .footer-link {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--color-gray-dark);
+      transition: color var(--transition-standard);
+    }
+
+    .footer-link:hover {
+      color: var(--color-navy);
+    }
+
+    /* Modal for Privacy Details */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(15, 30, 51, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 1.5rem;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-dialog {
+      background-color: #FFFFFF;
+      border-radius: var(--radius-md);
+      max-width: 600px;
+      width: 100%;
+      padding: 2.25rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      position: relative;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      color: var(--color-navy);
+    }
+
+    .modal-body {
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: var(--color-gray-dark);
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      line-height: 1;
+      cursor: pointer;
+      color: var(--color-gray);
+      padding: 0.25rem;
+    }
+
+    /* Spinner */
+    .btn-spinner {
+      display: none;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #FFFFFF;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+
+    .submitting .btn-spinner {
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 960px) {
+      .hero-layout {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+      }
+
+      .hero-headline {
+        font-size: 2.6rem;
+      }
+
+      .cards-grid-3,
+      .steps-grid,
+      .privacy-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .vision-box {
+        padding: 2rem 1.5rem;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .hero-headline {
+        font-size: 2.15rem;
+      }
+
+      .hero-tagline {
+        font-size: 1.25rem;
+      }
+
+      .form-row {
+        flex-direction: column;
+      }
+
+      .btn-submit {
+        width: 100%;
+        padding: 0.95rem 1rem;
+      }
+
+      .footer-layout {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+
+  <!-- Firebase Compatibility SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <!-- Site Navigation -->
+  <header class="site-header">
+    <div class="container">
+      <div class="nav-wrapper">
+        <a href="#" class="brand-logo" aria-label="VeriQuota Homepage">
+          <img src="public/veriquota-app-icon.png" alt="VeriQuota" class="brand-logo-icon" width="32" height="32">
+          <span>VeriQuota</span>
+        </a>
+
+        <div class="nav-actions">
+          <a href="#how-it-works" class="nav-link">How it works</a>
+          <a href="#privacy" class="nav-link">Privacy</a>
+          <a href="#waitlist" class="nav-btn">Get early access</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Section 1: Hero -->
+    <section class="hero-section" id="hero">
+      <div class="container">
+        <div class="hero-layout">
+          <div class="hero-content">
+            <div class="eyebrow-tag">
+              <span class="status-dot"></span>
+              <span>Coming soon to Android</span>
+            </div>
+
+            <h1 class="hero-headline">Your data shouldn't just disappear.</h1>
+            <p class="hero-tagline">Verify where your data goes.</p>
+
+            <p class="hero-description">
+              VeriQuota measures per-app data usage locally on-device, in real time, with no data leaving your phone. Gain clear visibility into background consumption before your plan runs out.
+            </p>
+
+            <div class="waitlist-form-container" id="waitlist">
+              <form class="waitlist-form" data-form="hero" novalidate>
+                <div class="form-row">
+                  <input
+                    type="email"
+                    class="input-email"
+                    placeholder="Enter your email address"
+                    aria-label="Email address for waitlist"
+                    required
+                    autocomplete="email"
+                  >
+                  <button type="submit" class="btn-submit">
+                    <span class="btn-spinner"></span>
+                    <span class="btn-text">Join the waitlist</span>
+                  </button>
+                </div>
+                <div class="form-status" role="status" aria-live="polite"></div>
+                <div class="form-meta">No spam. Updates on release dates and early access only.</div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Hero Visual: On-device Meter Mockup -->
+          <div class="hero-visual">
+            <div class="hero-card" aria-hidden="true">
+              <div class="card-header-bar">
+                <span class="card-title">Live Device Monitor</span>
+                <span class="card-badge">
+                  <span class="live-pulse"></span>
+                  Local Session
+                </span>
+              </div>
+
+              <div class="data-summary-box">
+                <div class="data-summary-label">Today's Measured Usage</div>
+                <div class="data-summary-val">1.42 <span>GB / 5.00 GB</span></div>
+              </div>
+
+              <ul class="meter-list">
+                <li class="meter-item">
+                  <div class="meter-label-row">
+                    <span class="app-name"><span class="app-badge-sm"></span> Social Feed App</span>
+                    <span class="app-usage">680 MB (48%)</span>
+                  </div>
+                  <div class="meter-bar-track">
+                    <div class="meter-bar-fill accent" style="width: 48%;"></div>
+                  </div>
+                </li>
+
+                <li class="meter-item">
+                  <div class="meter-label-row">
+                    <span class="app-name"><span class="app-badge-sm"></span> Background Sync Service</span>
+                    <span class="app-usage">410 MB (29%)</span>
+                  </div>
+                  <div class="meter-bar-track">
+                    <div class="meter-bar-fill" style="width: 29%;"></div>
+                  </div>
+                </li>
+
+                <li class="meter-item">
+                  <div class="meter-label-row">
+                    <span class="app-name"><span class="app-badge-sm"></span> Video Streaming</span>
+                    <span class="app-usage">240 MB (17%)</span>
+                  </div>
+                  <div class="meter-bar-track">
+                    <div class="meter-bar-fill muted" style="width: 17%;"></div>
+                  </div>
+                </li>
+
+                <li class="meter-item">
+                  <div class="meter-label-row">
+                    <span class="app-name"><span class="app-badge-sm"></span> Messaging & Mail</span>
+                    <span class="app-usage">90 MB (6%)</span>
+                  </div>
+                  <div class="meter-bar-track">
+                    <div class="meter-bar-fill muted" style="width: 6%;"></div>
+                  </div>
+                </li>
+              </ul>
+
+              <div class="card-footer-note">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span>Calculated on device via Android NetworkStatsManager</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: The Problem -->
+    <section class="problem-section" id="problem">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-kicker">The Problem</span>
+          <h2 class="section-title">Sound familiar?</h2>
+          <p class="section-subtitle">
+            Carrier invoices tell you how much data was billed, but never explain why it ran out prematurely.
+          </p>
+        </div>
+
+        <div class="cards-grid-3">
+          <div class="problem-card">
+            <span class="card-callout-number">01</span>
+            <h3 class="card-heading">Data gone with little phone use</h3>
+            <p class="card-text">
+              You bought a multi-gigabyte bundle in the morning. By afternoon, your carrier sends an exhaustion warning, even though your screen was turned off for most of the day.
+            </p>
+          </div>
+
+          <div class="problem-card">
+            <span class="card-callout-number">02</span>
+            <h3 class="card-heading">Carrier dashboards lack granularity</h3>
+            <p class="card-text">
+              Standard provider apps present single aggregate totals or delayed logs. They cannot tell you which specific package or background process initiated the transfer.
+            </p>
+          </div>
+
+          <div class="problem-card">
+            <span class="card-callout-number">03</span>
+            <h3 class="card-heading">Zero recourse for unexplained bills</h3>
+            <p class="card-text">
+              When billed usage does not match your real activity, customer service offers no dispute mechanism without independent, timestamped on-device records.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: How VeriQuota Works -->
+    <section class="how-section" id="how-it-works">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-kicker">Architecture</span>
+          <h2 class="section-title">How VeriQuota works</h2>
+          <p class="section-subtitle">
+            Three simple steps to establish reliable, independent accounting on your Android device.
+          </p>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-badge">1</div>
+            <h3 class="step-title">Install and grant one local permission</h3>
+            <p class="step-desc">
+              Grant standard Android Usage Access during setup. VeriQuota reads internal socket statistics directly from the operating system without routing traffic through a remote VPN.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-badge">2</div>
+            <h3 class="step-title">See real usage per app in a live breakdown</h3>
+            <p class="step-desc">
+              Review byte-level precision across foreground and background tasks. Identify misbehaving background synchronizations and silent updates in real time.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-badge">3</div>
+            <h3 class="step-title">Get alerted before you are surprised</h3>
+            <p class="step-desc">
+              Set custom thresholds for high consumption or runaway usage rates. VeriQuota alerts you immediately when an application exceeds expected transfer volume.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Trust & Privacy -->
+    <section class="privacy-section" id="privacy">
+      <div class="container">
+        <div class="section-header privacy-header">
+          <span class="section-kicker">Guaranteed Privacy</span>
+          <h2 class="section-title">Your data stays on your device.</h2>
+          <p class="section-subtitle">
+            A monitoring tool should never become a tracker. VeriQuota is architected around strict local execution and verifiable boundaries.
+          </p>
+        </div>
+
+        <div class="privacy-grid">
+          <div class="privacy-card">
+            <div class="privacy-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </div>
+            <h3 class="privacy-card-title">Measured locally always</h3>
+            <p class="privacy-card-text">
+              Network counters are read and stored exclusively in a sandboxed local database on your phone. No external servers participate in measurement.
+            </p>
+          </div>
+
+          <div class="privacy-card">
+            <div class="privacy-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <h3 class="privacy-card-title">Nothing uploaded by default</h3>
+            <p class="privacy-card-text">
+              The application requires no account registration to function. Your logs, usage patterns, and app lists remain private to your hardware.
+            </p>
+          </div>
+
+          <div class="privacy-card">
+            <div class="privacy-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <h3 class="privacy-card-title">No ads, trackers, or data-selling</h3>
+            <p class="privacy-card-text">
+              There are no third-party ad networks, telemetry bundles, or analyticsSDKs in our core binaries. Our incentives are aligned with user transparency.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Vision Teaser -->
+    <section class="vision-section" id="vision">
+      <div class="container">
+        <div class="vision-box">
+          <div class="vision-kicker">Long-term Direction</div>
+          <h2 class="vision-heading">An independent record for telecommunications</h2>
+          <p class="vision-text">
+            Beyond individual device insights, our future goal is to assemble an independent, entirely opt-in dataset comparing measured usage against billed usage across mobile networks. As an anonymized public record, this can provide concrete evidence for consumer advocates, investigative journalists, and regulatory oversight looking into unexpected billing practices.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6: Final CTA -->
+    <section class="final-cta-section" id="cta">
+      <div class="container container-narrow">
+        <div class="final-cta-content">
+          <span class="section-kicker">Early Access</span>
+          <h2 class="final-cta-title">Be first to test VeriQuota.</h2>
+          <p class="final-cta-text">
+            Join the waitlist to receive early builds for Android and release announcements. No spam, ever.
+          </p>
+
+          <form class="waitlist-form final-cta-form" data-form="footer" novalidate>
+            <div class="form-row">
+              <input
+                type="email"
+                class="input-email"
+                placeholder="Enter your email address"
+                aria-label="Email address for waitlist"
+                required
+                autocomplete="email"
+              >
+              <button type="submit" class="btn-submit">
+                <span class="btn-spinner"></span>
+                <span class="btn-text">Join the waitlist</span>
+              </button>
+            </div>
+            <div class="form-status" role="status" aria-live="polite"></div>
+            <div class="form-meta">Reserved for Android release updates and direct feedback channels.</div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Section 7: Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-layout">
+        <div class="footer-brand">
+          <div class="footer-brand-title">
+            <img src="public/veriquota-app-icon.png" alt="VeriQuota" class="brand-logo-icon" width="24" height="24" style="width: 24px; height: 24px;">
+            <span class="footer-logo">VeriQuota</span>
+          </div>
+          <span class="footer-copyright">&copy; 2026 VeriQuota. All rights reserved.</span>
+        </div>
+
+        <div class="footer-links">
+          <a href="mailto:contact@veriquota.com" class="footer-link">contact@veriquota.com</a>
+          <a href="#privacy-details" class="footer-link" id="open-privacy-modal">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Simple Privacy Details Modal -->
+  <div class="modal-backdrop" id="privacy-modal" aria-hidden="true" role="dialog" aria-labelledby="modal-privacy-title">
+    <div class="modal-dialog">
+      <button class="modal-close-btn" id="close-privacy-modal" aria-label="Close privacy policy">&times;</button>
+      <h3 class="modal-title" id="modal-privacy-title">Privacy Policy & Commitments</h3>
+      <div class="modal-body">
+        <p><strong>1. On-Device Execution:</strong> VeriQuota does not transmit personal data, app lists, or network counters to any cloud server by default. Calculations are conducted within the local operating system boundary.</p>
+        <p><strong>2. Waitlist Data:</strong> If you submit your email address on this landing page, it is securely stored solely to notify you when Android releases become available. We will never sell, rent, or share your email.</p>
+        <p><strong>3. Questions:</strong> For privacy inquiries, contact us directly at <a href="mailto:contact@veriquota.com" style="text-decoration: underline;">contact@veriquota.com</a>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript: Firebase Init & Waitlist Capture -->
+  <script>
+    /**
+     * FIREBASE CONFIGURATION
+     * Replace these placeholder values with your project credentials from the Firebase Console:
+     * Project Settings -> General -> Your apps -> Web app -> SDK setup and configuration.
+     */
+    const firebaseConfig = {
+      apiKey: "PASTE_YOUR_API_KEY_HERE",
+      authDomain: "PASTE_YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "PASTE_YOUR_PROJECT_ID",
+      storageBucket: "PASTE_YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID",
+      appId: "PASTE_YOUR_APP_ID"
+    };
+
+    // Initialize Firebase if valid config is detected
+    let db = null;
+    const isConfigured = firebaseConfig.projectId && !firebaseConfig.projectId.includes("PASTE_YOUR_");
+
+    if (isConfigured && typeof firebase !== "undefined") {
+      try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+      } catch (err) {
+        console.error("Firebase initialization failed:", err);
+      }
+    } else {
+      console.info("VeriQuota: Firebase configuration is pending. Replace placeholder values in index.html to activate live Firestore capture.");
+    }
+
+    /**
+     * Waitlist Form Handler
+     */
+    function setupWaitlistForm(form) {
+      const emailInput = form.querySelector('.input-email');
+      const submitBtn = form.querySelector('.btn-submit');
+      const statusBox = form.querySelector('.form-status');
+
+      function showStatus(message, type) {
+        statusBox.textContent = message;
+        statusBox.className = `form-status ${type}`;
+      }
+
+      function clearStatus() {
+        statusBox.textContent = '';
+        statusBox.className = 'form-status';
+      }
+
+      function isValidEmail(email) {
+        // Institutional RFC 5322 simplified pattern
+        const re = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+        return re.test(String(email).trim().toLowerCase());
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearStatus();
+
+        const rawEmail = emailInput.value.trim();
+
+        if (!rawEmail) {
+          showStatus("Please enter an email address.", "error");
+          emailInput.focus();
+          return;
+        }
+
+        if (!isValidEmail(rawEmail)) {
+          showStatus("Please enter a valid email address.", "error");
+          emailInput.focus();
+          return;
+        }
+
+        const normalizedEmail = rawEmail.toLowerCase();
+
+        // If Firebase is not yet configured with real API keys
+        if (!db) {
+          submitBtn.disabled = true;
+          form.classList.add('submitting');
+          
+          // Provide clean fallback feedback so the user testing locally sees immediate behavior
+          setTimeout(() => {
+            submitBtn.disabled = false;
+            form.classList.remove('submitting');
+            showStatus("Thank you. You have been added to the early access list.", "success");
+            emailInput.value = '';
+            console.log("[Demo Mode] Waitlist submission captured:", normalizedEmail);
+          }, 600);
+          return;
+        }
+
+        // Live Firestore submission
+        submitBtn.disabled = true;
+        form.classList.add('submitting');
+
+        try {
+          await db.collection("waitlist").add({
+            email: normalizedEmail,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+          showStatus("Thank you. You have been added to the early access list.", "success");
+          emailInput.value = '';
+        } catch (error) {
+          console.error("Firestore submission error:", error);
+          showStatus("Unable to submit right now. Please try again or reach out by email.", "error");
+        } finally {
+          submitBtn.disabled = false;
+          form.classList.remove('submitting');
+        }
+      });
+    }
+
+    // Attach handler to all waitlist forms (Hero and Footer CTA)
+    document.querySelectorAll('.waitlist-form').forEach(setupWaitlistForm);
+
+    // Simple Privacy Modal handling
+    const privacyModal = document.getElementById('privacy-modal');
+    const openPrivacyBtn = document.getElementById('open-privacy-modal');
+    const closePrivacyBtn = document.getElementById('close-privacy-modal');
+
+    if (openPrivacyBtn && privacyModal && closePrivacyBtn) {
+      openPrivacyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        privacyModal.classList.add('active');
+        privacyModal.setAttribute('aria-hidden', 'false');
+      });
+
+      closePrivacyBtn.addEventListener('click', () => {
+        privacyModal.classList.remove('active');
+        privacyModal.setAttribute('aria-hidden', 'true');
+      });
+
+      privacyModal.addEventListener('click', (e) => {
+        if (e.target === privacyModal) {
+          privacyModal.classList.remove('active');
+          privacyModal.setAttribute('aria-hidden', 'true');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

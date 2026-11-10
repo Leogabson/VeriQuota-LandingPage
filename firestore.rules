@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Match the waitlist collection
+    match /waitlist/{docId} {
+      // Allow public creation only, with field and email format validation
+      allow create: if request.resource.data.keys().hasOnly(['email', 'createdAt'])
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() >= 5
+                    && request.resource.data.email.size() <= 128
+                    && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+                    && request.resource.data.createdAt == request.time;
+
+      // Disallow all reads, updates, and deletions from the client
+      allow read: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Default deny all other documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
